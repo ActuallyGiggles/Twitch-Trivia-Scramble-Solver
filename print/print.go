@@ -67,7 +67,7 @@ func Page(title string, content func()) {
 	} else if title == "Started" {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgGreen)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgGreen)).WithFullWidth().Println(title)
-	} else if title == "Set up" {
+	} else if title == "Set Up" {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println(title)
 	}

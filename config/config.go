@@ -84,7 +84,7 @@ func saveConfig() {
 
 func configSetup() {
 	// Account name
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Enter the Twitch account name you will be using.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account Name: "))
@@ -95,7 +95,7 @@ func configSetup() {
 	})
 
 	// Account OAuth
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Obtaining your OAuth is necessary to connect to Twitch chat as yourself.\nHere is a link to get it: ", pterm.Underscore.Sprintf("https://twitchapps.com/tmi/\n")))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account OAuth: "), pterm.White("oauth:"))
@@ -106,7 +106,7 @@ func configSetup() {
 	})
 
 	// Channels to join
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Do you want to answer Trivia questions (t), Scramble questions (s), or both (b)?\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Answer: "))
@@ -128,7 +128,7 @@ func configSetup() {
 	})
 
 	// Channels to join
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the channels in which the program should act in.\nSeparate channel names with spaces.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Channels To Join: "))
@@ -139,7 +139,7 @@ func configSetup() {
 	})
 
 	// Time range
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the time interval in which to respond.\nThe time is enacted in seconds.\nSeparate with a space.\nMinimum of 1 second.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Interval: "))
@@ -177,7 +177,7 @@ func configSetup() {
 	})
 
 	// Random rejection
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of questions should purposefully be ignored.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
@@ -201,7 +201,7 @@ func configSetup() {
 	})
 
 	// Partially answer percentage
-	print.Page("Set up", func() {
+	print.Page("Set Up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of trivia questions should purposefully be partially answered first.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))

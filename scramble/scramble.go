@@ -3,6 +3,7 @@ package scramble
 import (
 	"encoding/json"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -19,24 +20,26 @@ func Unscramble(scrambledWord string) (possibleMatches []string) {
 	}
 
 	scrambledWord = strings.Trim(strings.ToLower(scrambledWord), " ")
+	scrambledSlice := strings.Split(scrambledWord, "")
+	sort.Strings(scrambledSlice)
 
 wordLoop:
 	for _, word := range words {
-		word = strings.ToLower(word)
-		wordSplit := strings.Split(word, "")
-		var matchingLetters int
+		if len(scrambledWord) != len(word) {
+			continue wordLoop
+		}
 
-		for _, wordLetter := range wordSplit {
-			if strings.Count(scrambledWord, wordLetter) == strings.Count(word, wordLetter) {
-				matchingLetters++
-			} else {
+		word = strings.Trim(strings.ToLower(word), " ")
+		wordSlice := strings.Split(word, "")
+		sort.Strings(wordSlice)
+
+		for i := 0; i < len(wordSlice); i++ {
+			if wordSlice[i] != scrambledSlice[i] {
 				continue wordLoop
 			}
 		}
 
-		if matchingLetters == len(scrambledWord) {
-			possibleMatches = append(possibleMatches, word)
-		}
+		possibleMatches = append(possibleMatches, word)
 	}
 
 	return possibleMatches
