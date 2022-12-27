@@ -48,27 +48,27 @@ func (w *worker) playScramble(message twitch.Message) {
 
 	switch isType(sentence) {
 	case "question":
-		if isRandomlyRejected() {
-			print.Print(print.Instructions{
-				Channel: message.Channel,
-				Service: "scramble",
-				Scramble: print.ScrambleMode{
-					Question: "",
-					Matches:  []string{},
-				},
-				Note:     "randomly rejected",
-				NoteOnly: true,
-				Error:    false,
-			})
-
-			config.UpdateStats(w.Channel, "scramble", "rejected")
-			return
-		}
-
 		question = split[len(split)-1]
 		matches := scramble.Unscramble(question)
 
 		if len(matches) > 0 {
+			if isRandomlyRejected() {
+				print.Print(print.Instructions{
+					Channel: message.Channel,
+					Service: "scramble",
+					Scramble: print.ScrambleMode{
+						Question: "",
+						Matches:  []string{},
+					},
+					Note:     "randomly rejected",
+					NoteOnly: true,
+					Error:    false,
+				})
+
+				config.UpdateStats(w.Channel, "scramble", "rejected")
+				return
+			}
+
 			go w.answer(print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
@@ -139,27 +139,27 @@ func (w *worker) playTrivia(message twitch.Message) {
 
 	switch isType(sentence) {
 	case "question":
-		if isRandomlyRejected() {
-			print.Print(print.Instructions{
-				Channel: message.Channel,
-				Service: "trivia",
-				Trivia: print.TriviaMode{
-					Question: "",
-					Answer:   "",
-				},
-				Note:     "randomly rejected",
-				NoteOnly: true,
-				Error:    false,
-			})
-
-			config.UpdateStats(w.Channel, "trivia", "rejected")
-			return
-		}
-
 		question = sentence
 		answer, answerFound := trivia.SearchTrivia(question)
 
 		if answerFound {
+			if isRandomlyRejected() {
+				print.Print(print.Instructions{
+					Channel: message.Channel,
+					Service: "trivia",
+					Trivia: print.TriviaMode{
+						Question: "",
+						Answer:   "",
+					},
+					Note:     "randomly rejected",
+					NoteOnly: true,
+					Error:    false,
+				})
+
+				config.UpdateStats(w.Channel, "trivia", "rejected")
+				return
+			}
+
 			go w.answer(print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
