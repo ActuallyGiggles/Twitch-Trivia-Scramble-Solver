@@ -18,11 +18,11 @@ var (
 type worker struct {
 	Channel string
 
-	TriviaUnknown  bool
+	TriviaKnown    bool
 	TriviaQuestion string
 	TriviaCancel   chan bool
 
-	ScrambleUnknown  bool
+	ScrambleKnown    bool
 	ScrambleQuestion string
 	ScrambleCancel   chan bool
 }
@@ -78,6 +78,8 @@ func (w *worker) playScramble(message twitch.Message) {
 				},
 				NoteOnly: false,
 			})
+			w.ScrambleQuestion = ""
+			w.ScrambleKnown = true
 			return
 		}
 
@@ -94,12 +96,12 @@ func (w *worker) playScramble(message twitch.Message) {
 				Error:    true,
 			})
 			w.ScrambleQuestion = question
-			w.ScrambleUnknown = true
+			w.ScrambleKnown = false
 			config.UpdateStats(w.Channel, "scramble", "unknown")
 			return
 		}
 	case "answer":
-		if w.ScrambleUnknown {
+		if !w.ScrambleKnown {
 			answer = extractAnswer(sentence)
 			scramble.AddWord(answer)
 
@@ -116,13 +118,14 @@ func (w *worker) playScramble(message twitch.Message) {
 			})
 
 			w.ScrambleQuestion = ""
-			w.ScrambleUnknown = false
+			w.ScrambleKnown = true
 			config.UpdateStats(w.Channel, "scramble", "learned")
 			return
 		}
 
-		if !w.ScrambleUnknown && question != "" {
+		if w.ScrambleKnown && w.ScrambleQuestion == "" {
 			w.ScrambleCancel <- true
+			return
 		}
 	}
 }
@@ -166,6 +169,8 @@ func (w *worker) playTrivia(message twitch.Message) {
 				},
 				NoteOnly: false,
 			})
+			w.TriviaQuestion = ""
+			w.TriviaKnown = true
 			return
 		}
 
@@ -182,13 +187,13 @@ func (w *worker) playTrivia(message twitch.Message) {
 				Error:    true,
 			})
 			w.TriviaQuestion = question
-			w.TriviaUnknown = true
+			w.TriviaKnown = false
 			config.UpdateStats(w.Channel, "trivia", "unknown")
 			return
 		}
 
 	case "answer":
-		if w.TriviaUnknown {
+		if !w.TriviaKnown {
 			answer = extractAnswer(sentence)
 			trivia.AddTrivia(w.TriviaQuestion, answer)
 
@@ -205,13 +210,14 @@ func (w *worker) playTrivia(message twitch.Message) {
 			})
 
 			w.TriviaQuestion = ""
-			w.TriviaUnknown = false
+			w.TriviaKnown = true
 			config.UpdateStats(w.Channel, "trivia", "learned")
 			return
 		}
 
-		if !w.TriviaUnknown && question != "" {
+		if w.TriviaKnown && w.TriviaQuestion == "" {
 			w.TriviaCancel <- true
+			return
 		}
 	}
 }
@@ -220,22 +226,28 @@ func (w *worker) answer(p print.Instructions) {
 	var eta int
 
 	if config.Config.AnswerInterval.Min == config.Config.AnswerInterval.Max {
-		eta = config.Config.AnswerInterval.Min
+		eta = config.Config.AnswerInterval.Max
 	} else {
 		eta = RandomNumber(config.Config.AnswerInterval.Min, config.Config.AnswerInterval.Max)
 	}
 
+	p.Note = "answering in " + strconv.Itoa(eta) + " seconds"
+	print.Print(p)
+
 	if p.Service == "trivia" {
 		config.UpdateStats(w.Channel, "trivia", "answered")
+
+		if eta == 1 {
+			time.Sleep(1 * time.Second)
+			twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
+			return
+		}
 
 		ticker := time.NewTicker(time.Duration(eta) * time.Second)
 		defer ticker.Stop()
 
 		ticker2 := time.NewTicker(time.Duration(eta/2) * time.Second)
 		defer ticker2.Stop()
-
-		p.Note = "answering in " + strconv.Itoa(eta) + " seconds"
-		print.Print(p)
 
 		for {
 			select {
@@ -249,7 +261,7 @@ func (w *worker) answer(p print.Instructions) {
 				twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
 				return
 			case <-ticker2.C:
-				if isPartialAnswerFirst() {
+				if isPartialAnswerFirst(p.Trivia.Answer) {
 					split := strings.Split(p.Trivia.Answer, " ")
 
 					if len(split) > 1 {
@@ -258,7 +270,7 @@ func (w *worker) answer(p print.Instructions) {
 						twitch.Say(w.Channel, strings.ToLower(strings.Join(split[:2], " ")))
 					}
 				}
-				return
+				continue
 			}
 		}
 	}
@@ -266,9 +278,13 @@ func (w *worker) answer(p print.Instructions) {
 	if p.Service == "scramble" {
 		config.UpdateStats(w.Channel, "scramble", "answered")
 
+		if eta == 1 {
+			time.Sleep(1 * time.Second)
+			twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
+			return
+		}
+
 		ticker := time.NewTicker(time.Duration(eta) * time.Second)
-		p.Note = "answering in " + strconv.Itoa(eta) + " seconds"
-		print.Print(p)
 
 		match := 0
 

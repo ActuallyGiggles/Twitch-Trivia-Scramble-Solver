@@ -139,7 +139,7 @@ func configSetup() {
 
 	// Time range
 	print.Page("Set up", func() {
-		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the time interval in which to respond.\nThe time is enacted in seconds.\nSeparate with a space.\n"))
+		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the time interval in which to respond.\nThe time is enacted in seconds.\nSeparate with a space.\nMinimum of 1 second.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Interval: "))
 		scanner := bufio.NewScanner(os.Stdin)
@@ -157,6 +157,18 @@ func configSetup() {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(r[1], "is not a number!")
+			os.Exit(3)
+		}
+		if min < 1 || max < 1 {
+			pterm.Println()
+			pterm.Println()
+			pterm.Error.Println("Cannot be less than 1!")
+			os.Exit(3)
+		}
+		if min > max {
+			pterm.Println()
+			pterm.Println()
+			pterm.Error.Println("Minimum cannot be greater than maximum!")
 			os.Exit(3)
 		}
 		Config.AnswerInterval.Min = min

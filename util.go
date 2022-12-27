@@ -15,7 +15,7 @@ var regex = regexp.MustCompile(`"(.*?)"`)
 var commonEmotesRegex = regexp.MustCompile(`KEKWait\s?|FeelsDankMan\s?|GuitarTime\s?|TeaTime\s?|FeelsGoodMan\s?|FeelsBadMan\s?|DankgG\s?`)
 
 func isTrivia(message twitch.Message) bool {
-	if message.Author == "amazefulbot" && strings.Contains(message.Message, "[Trivia]") {
+	if message.Author == "actuallygiggles" && strings.Contains(message.Message, "[Trivia]") {
 		if strings.Contains(message.Message, "Hint:") || strings.Contains(message.Message, "is close.") {
 			return false
 		}
@@ -25,7 +25,7 @@ func isTrivia(message twitch.Message) bool {
 }
 
 func isScramble(message twitch.Message) bool {
-	if message.Author == "amazefulbot" && strings.Contains(message.Message, "[Scramble]") {
+	if message.Author == "actuallygiggles" && strings.Contains(message.Message, "[Scramble]") {
 		if strings.Contains(message.Message, "Hint:") || strings.Contains(message.Message, "is close.") {
 			return false
 		}
@@ -85,7 +85,11 @@ func isRandomlyRejected() bool {
 	return true
 }
 
-func isPartialAnswerFirst() bool {
+func isPartialAnswerFirst(answer string) bool {
+	if len(strings.Split(answer, " ")) == 1 {
+		return false
+	}
+
 	num := RandomNumber(0, 100)
 
 	if num > config.Config.PartiallyAnswerPercentage {

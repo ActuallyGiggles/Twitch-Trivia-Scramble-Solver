@@ -52,7 +52,7 @@ func Print(p Instructions) {
 			message += fmt.Sprintf("%-20s           |  %s%s\n", pterm.Gray(p.Service), AType, A)
 		}
 
-		message += fmt.Sprintf("%-20s  |  %s\n\n", "", pterm.Gray("Note:      "+p.Note))
+		message += fmt.Sprintf("%-20s  |  %s\n\n", "", pterm.Gray("Note:        "+p.Note))
 
 		pterm.Success.Println(message)
 		pterm.Println()
