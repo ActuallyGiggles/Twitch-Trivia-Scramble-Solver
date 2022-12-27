@@ -13,7 +13,6 @@ var (
 )
 
 type trivia struct {
-	Source   string `json:"source"`
 	Question string `json:"question"`
 	Answer   string `json:"answer"`
 }
@@ -41,7 +40,7 @@ func SearchTrivia(question string) (answer string, found bool) {
 }
 
 func AddTrivia(question string, answer string) {
-	t = append(t, trivia{Source: "new", Question: question, Answer: answer})
+	t = append(t, trivia{Question: question, Answer: answer})
 	saveTrivia()
 }
 

@@ -32,7 +32,9 @@ func StartWorkers() {
 		w := worker{
 			Channel:        channel,
 			TriviaCancel:   make(chan bool),
+			TriviaKnown:    true,
 			ScrambleCancel: make(chan bool),
+			ScrambleKnown:  true,
 		}
 
 		workers[channel] = &w
