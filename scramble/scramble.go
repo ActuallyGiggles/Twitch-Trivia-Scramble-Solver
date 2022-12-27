@@ -48,7 +48,7 @@ func AddWord(word string) {
 }
 
 func loadWords() {
-	f, err := os.Open("./words.json")
+	f, err := os.Open("./scramble.json")
 	defer f.Close()
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func loadWords() {
 }
 
 func saveWords() {
-	f, err := os.OpenFile("./words.json", os.O_CREATE, 0666)
+	f, err := os.OpenFile("./scramble.json", os.O_CREATE, 0666)
 	if err != nil {
 		panic(err)
 	}
