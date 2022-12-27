@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 	"twitch-trivia-unscrambler/config"
+	"twitch-trivia-unscrambler/print"
 	"twitch-trivia-unscrambler/scramble"
 	"twitch-trivia-unscrambler/trivia"
 	"twitch-trivia-unscrambler/twitch"
@@ -48,10 +49,10 @@ func (w *worker) playScramble(message twitch.Message) {
 	switch isType(sentence) {
 	case "question":
 		if isRandomlyRejected() {
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
-				Scramble: scrambleMode{
+				Scramble: print.ScrambleMode{
 					Question: "",
 					Matches:  []string{},
 				},
@@ -68,10 +69,10 @@ func (w *worker) playScramble(message twitch.Message) {
 		matches := scramble.Unscramble(question)
 
 		if len(matches) > 0 {
-			go w.answer(printInstructions{
+			go w.answer(print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
-				Scramble: scrambleMode{
+				Scramble: print.ScrambleMode{
 					Question: question,
 					Matches:  matches,
 				},
@@ -81,10 +82,10 @@ func (w *worker) playScramble(message twitch.Message) {
 		}
 
 		if len(matches) == 0 {
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
-				Scramble: scrambleMode{
+				Scramble: print.ScrambleMode{
 					Question: question,
 					Matches:  matches,
 				},
@@ -102,10 +103,10 @@ func (w *worker) playScramble(message twitch.Message) {
 			answer = extractAnswer(sentence)
 			scramble.AddWord(answer)
 
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
-				Scramble: scrambleMode{
+				Scramble: print.ScrambleMode{
 					Question: question,
 					Matches:  []string{},
 				},
@@ -136,10 +137,10 @@ func (w *worker) playTrivia(message twitch.Message) {
 	switch isType(sentence) {
 	case "question":
 		if isRandomlyRejected() {
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
-				Trivia: triviaMode{
+				Trivia: print.TriviaMode{
 					Question: "",
 					Answer:   "",
 				},
@@ -156,10 +157,10 @@ func (w *worker) playTrivia(message twitch.Message) {
 		answer, answerFound := trivia.SearchTrivia(question)
 
 		if answerFound {
-			go w.answer(printInstructions{
+			go w.answer(print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
-				Trivia: triviaMode{
+				Trivia: print.TriviaMode{
 					Question: question,
 					Answer:   answer,
 				},
@@ -169,10 +170,10 @@ func (w *worker) playTrivia(message twitch.Message) {
 		}
 
 		if !answerFound {
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
-				Trivia: triviaMode{
+				Trivia: print.TriviaMode{
 					Question: question,
 					Answer:   answer,
 				},
@@ -191,10 +192,10 @@ func (w *worker) playTrivia(message twitch.Message) {
 			answer = extractAnswer(sentence)
 			trivia.AddTrivia(w.TriviaQuestion, answer)
 
-			Print(printInstructions{
+			print.Print(print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
-				Trivia: triviaMode{
+				Trivia: print.TriviaMode{
 					Question: question,
 					Answer:   answer,
 				},
@@ -215,7 +216,7 @@ func (w *worker) playTrivia(message twitch.Message) {
 	}
 }
 
-func (w *worker) answer(p printInstructions) {
+func (w *worker) answer(p print.Instructions) {
 	var eta int
 
 	if config.Config.AnswerInterval.Min == config.Config.AnswerInterval.Max {
@@ -234,7 +235,7 @@ func (w *worker) answer(p printInstructions) {
 		defer ticker2.Stop()
 
 		p.Note = "answering in " + strconv.Itoa(eta) + " seconds"
-		Print(p)
+		print.Print(p)
 
 		for {
 			select {
@@ -242,7 +243,7 @@ func (w *worker) answer(p printInstructions) {
 				p.Note = "answered by different user"
 				p.NoteOnly = true
 				p.Error = false
-				Print(p)
+				print.Print(p)
 				return
 			case <-ticker.C:
 				twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
@@ -267,7 +268,7 @@ func (w *worker) answer(p printInstructions) {
 
 		ticker := time.NewTicker(time.Duration(eta) * time.Second)
 		p.Note = "answering in " + strconv.Itoa(eta) + " seconds"
-		Print(p)
+		print.Print(p)
 
 		match := 0
 
@@ -277,7 +278,7 @@ func (w *worker) answer(p printInstructions) {
 				p.Note = "answering cancelled"
 				p.NoteOnly = true
 				p.Error = false
-				Print(p)
+				print.Print(p)
 				return
 			case <-ticker.C:
 				twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))

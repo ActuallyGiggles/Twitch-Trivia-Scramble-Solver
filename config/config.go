@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"twitch-trivia-unscrambler/print"
 
 	"github.com/pterm/pterm"
 )
@@ -13,18 +14,23 @@ import (
 var Config configuration
 
 type configuration struct {
-	AccountName    string
-	AccountOAuth   string
-	ChannelsToJoin []string
+	AccountName  string
+	AccountOAuth string
 
-	DoTrivia   bool
-	DoScramble bool
+	Play whichToPlay
+
+	ChannelsToJoin []string
 
 	AnswerInterval            numberRange
 	RandomRejectionPercentage int
 	PartiallyAnswerPercentage int
 
 	Stats []s
+}
+
+type whichToPlay struct {
+	Trivia   bool
+	Scramble bool
 }
 
 type numberRange struct {
@@ -78,8 +84,9 @@ func saveConfig() {
 
 func configSetup() {
 	// Account name
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Enter the Twitch account name you will be using.\n"))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account Name: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
@@ -88,8 +95,9 @@ func configSetup() {
 	})
 
 	// Account OAuth
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Obtaining your OAuth is necessary to connect to Twitch chat as yourself.\nHere is a link to get it: ", pterm.Underscore.Sprintf("https://twitchapps.com/tmi/\n")))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account OAuth: "), pterm.White("oauth:"))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
@@ -98,8 +106,9 @@ func configSetup() {
 	})
 
 	// Channels to join
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Do you want to answer Trivia questions (t), Scramble questions (s), or both (b)?\n"))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Answer: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
@@ -110,16 +119,17 @@ func configSetup() {
 			os.Exit(3)
 		}
 		if which[0] == "t" || which[0] == "b" {
-			Config.DoTrivia = true
+			Config.Play.Trivia = true
 		}
 		if which[0] == "s" || which[0] == "b" {
-			Config.DoScramble = true
+			Config.Play.Scramble = true
 		}
 	})
 
 	// Channels to join
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the channels in which the program should act in.\nSeparate channel names with spaces.\n"))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Channels To Join: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
@@ -128,8 +138,9 @@ func configSetup() {
 	})
 
 	// Time range
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the time interval in which to respond.\nThe time is enacted in seconds.\nSeparate with a space.\n"))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Interval: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
@@ -137,11 +148,13 @@ func configSetup() {
 		min, err := strconv.Atoi(r[0])
 		if err != nil {
 			pterm.Println()
+			pterm.Println()
 			pterm.Error.Println(r[0], "is not a number.")
 			os.Exit(3)
 		}
 		max, err := strconv.Atoi(r[1])
 		if err != nil {
+			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(r[1], "is not a number!")
 			os.Exit(3)
@@ -151,14 +164,16 @@ func configSetup() {
 	})
 
 	// Random rejection
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of questions should purposefully be ignored."))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		num := scanner.Text()
 		percentage, err := strconv.Atoi(num)
 		if err != nil {
+			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(num, "is not a number.")
 			os.Exit(3)
@@ -167,14 +182,16 @@ func configSetup() {
 	})
 
 	// Partially answer percentage
-	page(func() {
+	print.Page("Set up", func() {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of trivia questions should purposefully be partially answered first."))
+		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		num := scanner.Text()
 		percentage, err := strconv.Atoi(num)
 		if err != nil {
+			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(num, "is not a number.")
 			os.Exit(3)
@@ -183,16 +200,7 @@ func configSetup() {
 	})
 
 	saveConfig()
-}
-
-func page(content func()) {
-	print("\033[H\033[2J")
-	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
-	pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println("First Time Setup")
 	pterm.Println()
-	pterm.Println()
-	content()
-	print("\033[H\033[2J")
 }
 
 func UpdateStats(channel string, service string, stat string) {

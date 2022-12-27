@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 	"twitch-trivia-unscrambler/config"
+	"twitch-trivia-unscrambler/print"
 	"twitch-trivia-unscrambler/twitch"
 )
 
@@ -21,18 +22,18 @@ func main() {
 
 	go func() {
 		for message := range chat {
-			if isTrivia(message) && config.Config.DoTrivia {
+			if isTrivia(message) && config.Config.Play.Trivia {
 				go workers[message.Channel].playTrivia(message)
 			}
 
-			if isScramble(message) && config.Config.DoScramble {
+			if isScramble(message) && config.Config.Play.Scramble {
 				go workers[message.Channel].playScramble(message)
 			}
 		}
 	}()
 
-	page("Started", func() {})
+	print.Page("Started", func() {})
 
 	<-sc
-	page("Exited", func() {})
+	print.Page("Exited", func() {})
 }

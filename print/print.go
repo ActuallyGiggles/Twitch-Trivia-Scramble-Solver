@@ -1,4 +1,4 @@
-package main
+package print
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/pterm/pterm"
 )
 
-func Print(p printInstructions) {
+func Print(p Instructions) {
 	var Q string
 	var QType string
 	var AType string
@@ -59,15 +59,15 @@ func Print(p printInstructions) {
 	}
 }
 
-func page(title string, content func()) {
+func Page(title string, content func()) {
 	print("\033[H\033[2J")
 	if title == "Exited" {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightRed)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightRed)).WithFullWidth().Println(title)
 	} else if title == "Started" {
-		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightGreen)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
-		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightGreen)).WithFullWidth().Println(title)
-	} else {
+		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgGreen)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
+		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgGreen)).WithFullWidth().Println(title)
+	} else if title == "Set up" {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println(title)
 	}
@@ -98,12 +98,16 @@ func chunks(s string, chunkSize int) []string {
 	return chunks
 }
 
-type printInstructions struct {
+func Clear() {
+	print("\033[H\033[2J")
+}
+
+type Instructions struct {
 	Channel string
 
 	Service  string
-	Trivia   triviaMode
-	Scramble scrambleMode
+	Trivia   TriviaMode
+	Scramble ScrambleMode
 
 	Note     string
 	NoteOnly bool
@@ -111,12 +115,12 @@ type printInstructions struct {
 	Error bool
 }
 
-type triviaMode struct {
+type TriviaMode struct {
 	Question string
 	Answer   string
 }
 
-type scrambleMode struct {
+type ScrambleMode struct {
 	Question string
 	Matches  []string
 }
