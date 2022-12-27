@@ -1,4 +1,4 @@
-# TwitchTriviaScramblerSolver
+# Twitch Trivia/Scramble Solver
 
 TwitchTriviaScramblerSolver will automatically attempt to solve trivia questions and scramble questions asked by Amazefulbot in Twitch chatrooms. If it cannot solve the question, it will learn the question and the answer to said question.
 
