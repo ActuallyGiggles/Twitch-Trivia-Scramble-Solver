@@ -113,7 +113,8 @@ func configSetup() {
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		which := strings.Split(strings.ToLower(scanner.Text()), " ")
-		if len(which) > 1 {
+		if len(which) > 1 || (which[0] != "s" && which[0] != "b" && which[0] != "t") {
+			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Only answer with t for Trivia, s for scramble, or b for both.")
 			os.Exit(3)
@@ -177,7 +178,7 @@ func configSetup() {
 
 	// Random rejection
 	print.Page("Set up", func() {
-		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of questions should purposefully be ignored."))
+		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of questions should purposefully be ignored.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
 		scanner := bufio.NewScanner(os.Stdin)
@@ -190,12 +191,18 @@ func configSetup() {
 			pterm.Error.Println(num, "is not a number.")
 			os.Exit(3)
 		}
+		if percentage < 0 || percentage > 100 {
+			pterm.Println()
+			pterm.Println()
+			pterm.Error.Println("Number must be between 0 and 100!")
+			os.Exit(3)
+		}
 		Config.RandomRejectionPercentage = percentage
 	})
 
 	// Partially answer percentage
 	print.Page("Set up", func() {
-		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of trivia questions should purposefully be partially answered first."))
+		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of trivia questions should purposefully be partially answered first.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
 		scanner := bufio.NewScanner(os.Stdin)
@@ -206,6 +213,12 @@ func configSetup() {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(num, "is not a number.")
+			os.Exit(3)
+		}
+		if percentage < 0 || percentage > 100 {
+			pterm.Println()
+			pterm.Println()
+			pterm.Error.Println("Number must be between 0 and 100!")
 			os.Exit(3)
 		}
 		Config.PartiallyAnswerPercentage = percentage
