@@ -65,7 +65,8 @@ func (w *worker) playScramble(message twitch.Message) {
 					NoteOnly: true,
 					Error:    false,
 				})
-
+				w.ScrambleKnown = true
+				w.ScrambleQuestion = ""
 				config.UpdateStats(w.Channel, "scramble", "rejected")
 				return
 			}
@@ -127,7 +128,7 @@ func (w *worker) playScramble(message twitch.Message) {
 			return
 		}
 
-		if w.ScrambleKnown {
+		if w.ScrambleKnown && w.ScrambleCancel != nil {
 			w.ScrambleCancel()
 			return
 		}
@@ -222,7 +223,7 @@ func (w *worker) playTrivia(message twitch.Message) {
 			return
 		}
 
-		if w.TriviaKnown {
+		if w.TriviaKnown && w.TriviaCancel != nil {
 			w.TriviaCancel()
 			return
 		}
