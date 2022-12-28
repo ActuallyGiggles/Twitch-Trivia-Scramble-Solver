@@ -4,9 +4,7 @@ Twitch Trivia/Scramble Solver will automatically attempt to solve trivia questio
 
 ## Instructions
 
-Download [`trivia.json`](https://github.com/ActuallyGiggles/twitch-trivia-scramble-solver/blob/main/trivia.json) and/or [`scramble.json`](https://github.com/ActuallyGiggles/twitch-trivia-scramble-solver/blob/main/words.json). After downloading the [`twitch-trivia-unscrambler.exe`](https://github.com/ActuallyGiggles/twitch-trivia-scramble-solver/releases/tag/1.0.0), create a folder in your desired location with your desired name. Move `trivia.json` and `scramble.json` to that folder, along with `twitch-trivia-unscrambler.exe`.
-
-Now you can launch `twitch-trivia-unscrambler.exe` and the program will run you through the first time setup.
+Download [`twitch-trivia-unscrambler.zip`](https://github.com/ActuallyGiggles/twitch-trivia-scramble-solver/releases/tag/1.0.0) and unzip it. Now you can launch `twitch-trivia-unscrambler.exe` inside of that folder and the program will run you through the first time setup.
 
 ## Additional Information
 
