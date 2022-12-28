@@ -265,7 +265,7 @@ func (w *worker) answer(ctx context.Context, p print.Instructions) {
 				print.Print(p)
 				return
 			case <-ticker.C:
-				w.TriviaCancel()
+				w.TriviaCancel = nil
 				twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
 				return
 			case <-ticker2.C:
@@ -305,6 +305,7 @@ func (w *worker) answer(ctx context.Context, p print.Instructions) {
 				print.Print(p)
 				return
 			case <-ticker.C:
+				w.ScrambleCancel = nil
 				if len(p.Scramble.Matches) == 2 {
 					twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))
 					match++
