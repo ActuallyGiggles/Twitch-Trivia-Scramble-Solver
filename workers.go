@@ -52,6 +52,24 @@ func (w *worker) playScramble(message twitch.Message) {
 		question = split[len(split)-1]
 		matches := scramble.Unscramble(question)
 
+		if len(matches) == 0 {
+			print.Print(print.Instructions{
+				Channel: message.Channel,
+				Service: "scramble",
+				Scramble: print.ScrambleMode{
+					Question: question,
+					Matches:  matches,
+				},
+				Note:     "scramble unknown",
+				NoteOnly: true,
+				Error:    true,
+			})
+			w.ScrambleQuestion = question
+			w.ScrambleKnown = false
+			config.UpdateStats(w.Channel, "scramble", "unknown")
+			return
+		}
+
 		if len(matches) > 0 {
 			if isRandomlyRejected() {
 				print.Print(print.Instructions{
@@ -85,24 +103,6 @@ func (w *worker) playScramble(message twitch.Message) {
 			w.ScrambleCancel = cancel
 			w.ScrambleQuestion = ""
 			w.ScrambleKnown = true
-			return
-		}
-
-		if len(matches) == 0 {
-			print.Print(print.Instructions{
-				Channel: message.Channel,
-				Service: "scramble",
-				Scramble: print.ScrambleMode{
-					Question: question,
-					Matches:  matches,
-				},
-				Note:     "scramble unknown",
-				NoteOnly: true,
-				Error:    true,
-			})
-			w.ScrambleQuestion = question
-			w.ScrambleKnown = false
-			config.UpdateStats(w.Channel, "scramble", "unknown")
 			return
 		}
 	case "answer":
@@ -147,6 +147,24 @@ func (w *worker) playTrivia(message twitch.Message) {
 		question = sentence
 		answer, answerFound := trivia.SearchTrivia(question)
 
+		if !answerFound {
+			print.Print(print.Instructions{
+				Channel: message.Channel,
+				Service: "trivia",
+				Trivia: print.TriviaMode{
+					Question: question,
+					Answer:   answer,
+				},
+				Note:     "answer unknown",
+				NoteOnly: true,
+				Error:    true,
+			})
+			w.TriviaQuestion = question
+			w.TriviaKnown = false
+			config.UpdateStats(w.Channel, "trivia", "unknown")
+			return
+		}
+
 		if answerFound {
 			if isRandomlyRejected() {
 				print.Print(print.Instructions{
@@ -181,25 +199,6 @@ func (w *worker) playTrivia(message twitch.Message) {
 			w.TriviaKnown = true
 			return
 		}
-
-		if !answerFound {
-			print.Print(print.Instructions{
-				Channel: message.Channel,
-				Service: "trivia",
-				Trivia: print.TriviaMode{
-					Question: question,
-					Answer:   answer,
-				},
-				Note:     "answer unknown",
-				NoteOnly: true,
-				Error:    true,
-			})
-			w.TriviaQuestion = question
-			w.TriviaKnown = false
-			config.UpdateStats(w.Channel, "trivia", "unknown")
-			return
-		}
-
 	case "answer":
 		if !w.TriviaKnown {
 			answer = extractAnswer(sentence)
@@ -307,13 +306,11 @@ func (w *worker) answer(ctx context.Context, p print.Instructions) {
 				return
 			case <-ticker.C:
 				w.ScrambleCancel = nil
-				if len(p.Scramble.Matches) == 2 {
-					twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))
-					match++
-					if match >= len(p.Scramble.Matches) {
-						ticker.Stop()
-						return
-					}
+				twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))
+				match++
+				if match >= len(p.Scramble.Matches) {
+					ticker.Stop()
+					return
 				}
 			}
 		}
