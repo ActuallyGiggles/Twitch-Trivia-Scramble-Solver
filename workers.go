@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -20,21 +21,19 @@ type worker struct {
 
 	TriviaKnown    bool
 	TriviaQuestion string
-	TriviaCancel   chan bool
+	TriviaCancel   context.CancelFunc
 
 	ScrambleKnown    bool
 	ScrambleQuestion string
-	ScrambleCancel   chan bool
+	ScrambleCancel   context.CancelFunc
 }
 
 func StartWorkers() {
 	for _, channel := range config.Config.ChannelsToJoin {
 		w := worker{
-			Channel:        channel,
-			TriviaCancel:   make(chan bool),
-			TriviaKnown:    true,
-			ScrambleCancel: make(chan bool),
-			ScrambleKnown:  true,
+			Channel:       channel,
+			TriviaKnown:   true,
+			ScrambleKnown: true,
 		}
 
 		workers[channel] = &w
@@ -71,7 +70,9 @@ func (w *worker) playScramble(message twitch.Message) {
 				return
 			}
 
-			go w.answer(print.Instructions{
+			ctx, cancel := context.WithCancel(context.Background())
+
+			go w.answer(ctx, print.Instructions{
 				Channel: message.Channel,
 				Service: "scramble",
 				Scramble: print.ScrambleMode{
@@ -80,6 +81,7 @@ func (w *worker) playScramble(message twitch.Message) {
 				},
 				NoteOnly: false,
 			})
+			w.ScrambleCancel = cancel
 			w.ScrambleQuestion = ""
 			w.ScrambleKnown = true
 			return
@@ -125,8 +127,8 @@ func (w *worker) playScramble(message twitch.Message) {
 			return
 		}
 
-		if w.ScrambleKnown && w.ScrambleQuestion == "" {
-			w.ScrambleCancel <- true
+		if w.ScrambleKnown {
+			w.ScrambleCancel()
 			return
 		}
 	}
@@ -162,7 +164,9 @@ func (w *worker) playTrivia(message twitch.Message) {
 				return
 			}
 
-			go w.answer(print.Instructions{
+			ctx, cancel := context.WithCancel(context.Background())
+
+			go w.answer(ctx, print.Instructions{
 				Channel: message.Channel,
 				Service: "trivia",
 				Trivia: print.TriviaMode{
@@ -171,6 +175,7 @@ func (w *worker) playTrivia(message twitch.Message) {
 				},
 				NoteOnly: false,
 			})
+			w.TriviaCancel = cancel
 			w.TriviaQuestion = ""
 			w.TriviaKnown = true
 			return
@@ -217,14 +222,14 @@ func (w *worker) playTrivia(message twitch.Message) {
 			return
 		}
 
-		if w.TriviaKnown && w.TriviaQuestion == "" {
-			w.TriviaCancel <- true
+		if w.TriviaKnown {
+			w.TriviaCancel()
 			return
 		}
 	}
 }
 
-func (w *worker) answer(p print.Instructions) {
+func (w *worker) answer(ctx context.Context, p print.Instructions) {
 	var eta int
 
 	if config.Config.AnswerInterval.Min == config.Config.AnswerInterval.Max {
@@ -253,23 +258,24 @@ func (w *worker) answer(p print.Instructions) {
 
 		for {
 			select {
-			case <-w.TriviaCancel:
-				p.Note = "answered by different user"
+			case <-ctx.Done():
+				p.Note = "answering cancelled"
 				p.NoteOnly = true
 				p.Error = false
 				print.Print(p)
 				return
 			case <-ticker.C:
+				w.TriviaCancel()
 				twitch.Say(w.Channel, strings.ToLower(p.Trivia.Answer))
 				return
 			case <-ticker2.C:
 				if isPartialAnswerFirst(p.Trivia.Answer) {
 					split := strings.Split(p.Trivia.Answer, " ")
 
-					if len(split) > 1 {
+					if len(split) == 2 {
 						twitch.Say(w.Channel, strings.ToLower(strings.Join(split[:1], " ")))
 					} else if len(split) > 2 {
-						twitch.Say(w.Channel, strings.ToLower(strings.Join(split[:2], " ")))
+						twitch.Say(w.Channel, strings.ToLower(strings.Join(split[len(split)-2:], " ")))
 					}
 				}
 				continue
@@ -292,18 +298,20 @@ func (w *worker) answer(p print.Instructions) {
 
 		for {
 			select {
-			case <-w.ScrambleCancel:
+			case <-ctx.Done():
 				p.Note = "answering cancelled"
 				p.NoteOnly = true
 				p.Error = false
 				print.Print(p)
 				return
 			case <-ticker.C:
-				twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))
-				match++
-				if match == len(p.Scramble.Matches) {
-					ticker.Stop()
-					return
+				if len(p.Scramble.Matches) == 2 {
+					twitch.Say(w.Channel, strings.ToLower(p.Scramble.Matches[match]))
+					match++
+					if match >= len(p.Scramble.Matches) {
+						ticker.Stop()
+						return
+					}
 				}
 			}
 		}
