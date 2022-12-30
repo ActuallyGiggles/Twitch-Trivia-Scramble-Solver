@@ -1,7 +1,9 @@
 package print
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 	"unicode/utf8"
 
@@ -59,7 +61,8 @@ func Print(p Instructions) {
 	}
 }
 
-func Page(title string, content func()) {
+func Page(title string, content func() bool) {
+doAgain:
 	print("\033[H\033[2J")
 	if title == "Exited" {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightRed)).WithFullWidth().Println("Twitch Trivia/Scramble Autosolver by ActuallyGiggles")
@@ -72,7 +75,12 @@ func Page(title string, content func()) {
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).WithFullWidth().Println(title)
 	}
 	pterm.Println()
-	content()
+	if !content() {
+		pterm.Error.Println("Press Enter to try again.")
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		goto doAgain
+	}
 }
 
 func chunks(s string, chunkSize int) []string {

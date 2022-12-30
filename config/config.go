@@ -50,18 +50,20 @@ type statistics struct {
 	Unknown  int
 }
 
-func GetConfig() {
+func GetConfig() bool {
 	f, err := os.Open("./config.json")
 	defer f.Close()
 	if err != nil {
 		configSetup()
-		return
+		return false
 	}
 
 	err = json.NewDecoder(f).Decode(&Config)
 	if err != nil {
 		panic(err)
 	}
+
+	return true
 }
 
 func saveConfig() {
@@ -84,7 +86,7 @@ func saveConfig() {
 
 func configSetup() {
 	// Account name
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Enter the Twitch account name you will be using.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account Name: "))
@@ -92,10 +94,11 @@ func configSetup() {
 		scanner.Scan()
 		name := strings.ToLower(scanner.Text())
 		Config.AccountName = name
+		return true
 	})
 
 	// Account OAuth
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Obtaining your OAuth is necessary to connect to Twitch chat as yourself.\nHere is a link to get it: ", pterm.Underscore.Sprintf("https://twitchapps.com/tmi/\n")))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Account OAuth: "), pterm.White("oauth:"))
@@ -103,10 +106,11 @@ func configSetup() {
 		scanner.Scan()
 		oauth := strings.ToLower(scanner.Text())
 		Config.AccountOAuth = oauth
+		return true
 	})
 
-	// Channels to join
-	print.Page("Set Up", func() {
+	// Play which games
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Do you want to answer Trivia questions (t), Scramble questions (s), or both (b)?\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Answer: "))
@@ -117,7 +121,7 @@ func configSetup() {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Only answer with t for Trivia, s for scramble, or b for both.")
-			os.Exit(3)
+			return false
 		}
 		if which[0] == "t" || which[0] == "b" {
 			Config.Play.Trivia = true
@@ -125,21 +129,29 @@ func configSetup() {
 		if which[0] == "s" || which[0] == "b" {
 			Config.Play.Scramble = true
 		}
+		return true
 	})
 
 	// Channels to join
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the channels in which the program should act in.\nSeparate channel names with spaces.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Channels To Join: "))
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		channels := strings.Split(strings.ToLower(scanner.Text()), " ")
+		if strings.Trim(channels[0], " ") == "" {
+			pterm.Println()
+			pterm.Println()
+			pterm.Error.Println("No channels entered!")
+			return false
+		}
 		Config.ChannelsToJoin = channels
+		return true
 	})
 
 	// Time range
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Println(pterm.LightBlue("Specify the time interval in which to respond.\nThe time is enacted in seconds.\nSeparate with a space.\nMinimum of 1 second.\n"))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Interval: "))
@@ -150,34 +162,35 @@ func configSetup() {
 		if err != nil {
 			pterm.Println()
 			pterm.Println()
-			pterm.Error.Println(r[0], "is not a number.")
-			os.Exit(3)
+			pterm.Error.Println(r[0], "is not a number!")
+			return false
 		}
 		max, err := strconv.Atoi(r[1])
 		if err != nil {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(r[1], "is not a number!")
-			os.Exit(3)
+			return false
 		}
 		if min < 1 || max < 1 {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Cannot be less than 1!")
-			os.Exit(3)
+			return false
 		}
 		if min > max {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Minimum cannot be greater than maximum!")
-			os.Exit(3)
+			return false
 		}
 		Config.AnswerInterval.Min = min
 		Config.AnswerInterval.Max = max
+		return true
 	})
 
 	// Random rejection
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of questions should purposefully be ignored.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
@@ -189,19 +202,20 @@ func configSetup() {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(num, "is not a number.")
-			os.Exit(3)
+			return false
 		}
 		if percentage < 0 || percentage > 100 {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Number must be between 0 and 100!")
-			os.Exit(3)
+			return false
 		}
 		Config.RandomRejectionPercentage = percentage
+		return true
 	})
 
 	// Partially answer percentage
-	print.Page("Set Up", func() {
+	print.Page("Set Up", func() bool {
 		pterm.DefaultCenter.WithCenterEachLineSeparately().Print(pterm.LightBlue("Specify what percentage of trivia questions should purposefully be partially answered first.\nMust be between 0 and 100."))
 		pterm.Println()
 		pterm.Print(pterm.LightBlue("	--Percentage: "))
@@ -213,15 +227,16 @@ func configSetup() {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println(num, "is not a number.")
-			os.Exit(3)
+			return false
 		}
 		if percentage < 0 || percentage > 100 {
 			pterm.Println()
 			pterm.Println()
 			pterm.Error.Println("Number must be between 0 and 100!")
-			os.Exit(3)
+			return false
 		}
 		Config.PartiallyAnswerPercentage = percentage
+		return true
 	})
 
 	saveConfig()

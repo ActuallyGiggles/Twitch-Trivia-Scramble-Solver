@@ -14,6 +14,7 @@ func main() {
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
 	config.GetConfig()
+
 	StartWorkers()
 
 	chat := make(chan twitch.Message)
@@ -32,8 +33,12 @@ func main() {
 		}
 	}()
 
-	print.Page("Started", func() {})
+	print.Page("Started", func() bool {
+		return true
+	})
 
 	<-sc
-	print.Page("Exited", func() {})
+	print.Page("Exited", func() bool {
+		return true
+	})
 }
